@@ -11,22 +11,18 @@ import ru.gendalf13666.dictionary.model.data.DataModel
 
 class RetrofitImplementation : DataSource<List<DataModel>> {
 
-    override fun getData(word: String): Observable<List<DataModel>> {
-        return getService(BaseInterceptor.interceptor).search(word)
-    }
+    override fun getData(word: String): Observable<List<DataModel>> = getService(BaseInterceptor.interceptor).search(word)
 
-    private fun getService(interceptor: Interceptor): ApiService {
-        return createRetrofit(interceptor).create(ApiService::class.java)
-    }
+    private fun getService(interceptor: Interceptor): ApiService = createRetrofit(interceptor).create(
+        ApiService::class.java
+    )
 
-    private fun createRetrofit(interceptor: Interceptor): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL_LOCATIONS)
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .client(createOkHttpClient(interceptor))
-            .build()
-    }
+    private fun createRetrofit(interceptor: Interceptor): Retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL_LOCATIONS)
+        .addConverterFactory(GsonConverterFactory.create())
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .client(createOkHttpClient(interceptor))
+        .build()
 
     private fun createOkHttpClient(interceptor: Interceptor): OkHttpClient {
         val httpClient = OkHttpClient.Builder()
