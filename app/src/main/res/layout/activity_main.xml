@@ -23,7 +23,8 @@
             android:layout_marginEnd="@dimen/margin_medium"
             android:layout_marginBottom="@dimen/margin_medium"
             android:backgroundTint="@color/colorAccent"
-            android:src="@drawable/ic_search" />
+            android:src="@drawable/ic_search"
+            android:contentDescription="@string/todo" />
     </FrameLayout>
 
     <FrameLayout

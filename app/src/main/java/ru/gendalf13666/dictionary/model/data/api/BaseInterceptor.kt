@@ -1,4 +1,4 @@
-package ru.gendalf13666.dictionary.model.datasource
+package ru.gendalf13666.dictionary.model.data.api
 
 import okhttp3.Interceptor
 import okhttp3.Response
