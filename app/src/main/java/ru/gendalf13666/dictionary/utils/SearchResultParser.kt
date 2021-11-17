@@ -1,9 +1,9 @@
 package ru.gendalf13666.dictionary.utils
 
-import ru.gendalf13666.dictionary.model.data.AppState
-import ru.gendalf13666.dictionary.model.data.DataModel
-import ru.gendalf13666.dictionary.model.data.Meanings
-import ru.gendalf13666.dictionary.room.HistoryEntity
+import ru.gendalf13666.repo.model.data.AppState
+import ru.gendalf13666.repo.model.data.DataModel
+import ru.gendalf13666.repo.model.data.Meanings
+import ru.gendalf13666.repo.room.HistoryEntity
 
 fun parseOnlineSearchResults(state: AppState): AppState = AppState.Success(mapResult(state, true))
 
@@ -37,8 +37,8 @@ private fun getSuccessResultData(data: AppState.Success, isOnline: Boolean, newD
 private fun parseOnlineResult(dataModel: DataModel, newDataModels: ArrayList<DataModel>) {
     if (!dataModel.text.isNullOrBlank() && !dataModel.meanings.isNullOrEmpty()) {
         val newMeanings = arrayListOf<Meanings>()
-        for (meaning in dataModel.meanings) {
-            if (meaning.translation != null && !meaning.translation.translation.isNullOrBlank()) {
+        for (meaning in dataModel.meanings!!) {
+            if (meaning.translation != null && !meaning.translation!!.translation.isNullOrBlank()) {
                 newMeanings.add(Meanings(meaning.translation, meaning.imageUrl))
             }
         }
@@ -65,12 +65,16 @@ fun convertDataModelSuccessToEntity(appState: AppState): HistoryEntity? {
             if (searchResult.isNullOrEmpty() || searchResult[0].text.isNullOrEmpty()) {
                 null
             } else {
-                HistoryEntity(searchResult[0].text!!, null)
+                HistoryEntity(
+                    searchResult[0].text!!,
+                    null
+                )
             }
         }
         else -> null
     }
 }
+
 
 fun convertMeaningsToString(meanings: List<Meanings>): String {
     var meaningsSeparatedByComma = String()

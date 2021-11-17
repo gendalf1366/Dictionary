@@ -3,19 +3,18 @@ package ru.gendalf13666.dictionary.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.*
-import ru.gendalf13666.dictionary.model.data.AppState
+import ru.gendalf13666.repo.model.data.AppState
 
 abstract class BaseViewModel<T : AppState>(
     protected open val mutableLiveData: MutableLiveData<T> = MutableLiveData()
 ) : ViewModel() {
 
     protected val viewModelCoroutineScope = CoroutineScope(
-        Dispatchers.Main +
-            SupervisorJob() +
-            CoroutineExceptionHandler { _, throwable ->
-                handleError(throwable)
-            }
-    )
+        Dispatchers.Main
+                + SupervisorJob()
+                + CoroutineExceptionHandler { _, throwable ->
+            handleError(throwable)
+        })
 
     override fun onCleared() {
         super.onCleared()

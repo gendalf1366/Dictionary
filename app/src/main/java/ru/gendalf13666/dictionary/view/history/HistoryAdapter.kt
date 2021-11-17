@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_history_recyclerview_item.view.*
 import ru.gendalf13666.dictionary.R
-import ru.gendalf13666.dictionary.model.data.DataModel
+import ru.gendalf13666.repo.model.data.DataModel
 
 class HistoryAdapter(private var onListItemClickListener: OnListItemClickListener) : RecyclerView.Adapter<HistoryAdapter.RecyclerItemViewHolder>() {
 
@@ -49,4 +49,5 @@ class HistoryAdapter(private var onListItemClickListener: OnListItemClickListene
     interface OnListItemClickListener {
         fun onItemClick(data: DataModel)
     }
+
 }

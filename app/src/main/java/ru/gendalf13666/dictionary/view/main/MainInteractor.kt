@@ -1,12 +1,12 @@
 package ru.gendalf13666.dictionary.view.main
 
-import ru.gendalf13666.dictionary.model.data.AppState
-import ru.gendalf13666.dictionary.model.data.DataModel
-import ru.gendalf13666.dictionary.model.repository.Repository
-import ru.gendalf13666.dictionary.model.repository.RepositoryLocal
 import ru.gendalf13666.dictionary.viewmodel.Interactor
+import ru.gendalf13666.repo.Repository
+import ru.gendalf13666.repo.RepositoryLocal
+import ru.gendalf13666.repo.model.data.AppState
+import ru.gendalf13666.repo.model.data.DataModel
 
-class MainInteractor(
+class MainInteractor (
     private val repositoryRemote: Repository<List<DataModel>>,
     private val repositoryLocal: RepositoryLocal<List<DataModel>>
 ) : Interactor<AppState> {

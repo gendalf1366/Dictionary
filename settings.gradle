@@ -1,2 +1,3 @@
-rootProject.name = "Dictionary"
-include ':app'
+rootProject.name='Dictionary'
+include Modules.app
+include Modules.repo

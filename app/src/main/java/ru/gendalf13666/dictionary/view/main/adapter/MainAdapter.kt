@@ -6,8 +6,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main_recyclerview_item.view.*
 import ru.gendalf13666.dictionary.R
-import ru.gendalf13666.dictionary.model.data.DataModel
 import ru.gendalf13666.dictionary.utils.convertMeaningsToString
+import ru.gendalf13666.repo.model.data.DataModel
 
 class MainAdapter(private var onListItemClickListener: OnListItemClickListener) :
     RecyclerView.Adapter<MainAdapter.RecyclerItemViewHolder>() {
@@ -32,11 +32,13 @@ class MainAdapter(private var onListItemClickListener: OnListItemClickListener) 
 
     override fun getItemCount(): Int = data.size
 
+
+
     inner class RecyclerItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         fun bind(data: DataModel) {
             if (layoutPosition != RecyclerView.NO_POSITION) {
-                itemView.word_recycler_item.text = data.text
+                itemView.word_recycler_item .text = data.text
                 itemView.translation_recycler_item.text =
                     convertMeaningsToString(data.meanings!!)
                 itemView.setOnClickListener { openInNewWindow(data) }
