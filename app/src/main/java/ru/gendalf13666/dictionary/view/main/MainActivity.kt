@@ -9,18 +9,18 @@ import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.android.viewmodel.ext.android.viewModel
 import ru.gendalf13666.dictionary.R
-import ru.gendalf13666.dictionary.model.data.AppState
-import ru.gendalf13666.dictionary.model.data.DataModel
 import ru.gendalf13666.dictionary.utils.convertMeaningsToString
 import ru.gendalf13666.dictionary.utils.network.isOnline
 import ru.gendalf13666.dictionary.view.base.BaseActivity
 import ru.gendalf13666.dictionary.view.description.DescriptionActivity
 import ru.gendalf13666.dictionary.view.history.HistoryActivity
 import ru.gendalf13666.dictionary.view.main.adapter.MainAdapter
+import ru.gendalf13666.repo.model.data.AppState
+import ru.gendalf13666.repo.model.data.DataModel
 
 private const val BOTTOM_SHEET_FRAGMENT_DIALOG_TAG = "74m54328"
 
-class MainActivity : BaseActivity<AppState, MainInteractor>() {
+class MainActivity : BaseActivity<AppState, MainInteractor>()  {
 
     override val model: MainViewModel by viewModel()
     private val adapter: MainAdapter by lazy { MainAdapter(onListItemClickListener) }
@@ -31,27 +31,28 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
         }
     }
     private val onListItemClickListener = object : MainAdapter.OnListItemClickListener {
-        override fun onItemClick(data: DataModel) {
-            startActivity(
-                DescriptionActivity.getIntent(
-                    this@MainActivity,
-                    data.text!!,
-                    convertMeaningsToString(data.meanings!!),
-                    data.meanings[0].imageUrl
+            override fun onItemClick(data: DataModel) {
+                startActivity(
+                    DescriptionActivity.getIntent(
+                        this@MainActivity,
+                        data.text!!,
+                        convertMeaningsToString(data.meanings!!),
+                        data.meanings!![0].imageUrl
+                    )
                 )
-            )
-        }
-    }
-    private val onSearchClickListener = object : SearchDialogFragment.OnSearchClickListener {
-        override fun onClick(searchWord: String) {
-            isNetworkAvailable = isOnline(applicationContext)
-            if (isNetworkAvailable) {
-                model.getData(searchWord, isNetworkAvailable)
-            } else {
-                showNoInternetConnectionDialog()
+
             }
         }
-    }
+    private val onSearchClickListener = object : SearchDialogFragment.OnSearchClickListener {
+            override fun onClick(searchWord: String) {
+                isNetworkAvailable = isOnline(applicationContext)
+                if (isNetworkAvailable) {
+                    model.getData(searchWord, isNetworkAvailable)
+                } else {
+                    showNoInternetConnectionDialog()
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,4 +91,5 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
 }

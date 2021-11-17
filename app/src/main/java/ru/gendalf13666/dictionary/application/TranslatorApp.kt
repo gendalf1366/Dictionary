@@ -14,6 +14,7 @@ class TranslatorApp : Application() {
         startKoin {
             androidContext(applicationContext)
             modules(listOf(application, mainScreen, historyScreen))
+
         }
     }
 }

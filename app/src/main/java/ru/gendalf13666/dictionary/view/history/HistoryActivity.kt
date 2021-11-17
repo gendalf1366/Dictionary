@@ -6,9 +6,9 @@ import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_history.*
 import org.koin.android.viewmodel.ext.android.viewModel
 import ru.gendalf13666.dictionary.R
-import ru.gendalf13666.dictionary.model.data.AppState
-import ru.gendalf13666.dictionary.model.data.DataModel
 import ru.gendalf13666.dictionary.view.base.BaseActivity
+import ru.gendalf13666.repo.model.data.AppState
+import ru.gendalf13666.repo.model.data.DataModel
 
 class HistoryActivity : BaseActivity<AppState, HistoryInteractor>() {
 
@@ -16,10 +16,8 @@ class HistoryActivity : BaseActivity<AppState, HistoryInteractor>() {
     private val adapter: HistoryAdapter by lazy { HistoryAdapter(onListItemClickListener) }
     private val onListItemClickListener = object : HistoryAdapter.OnListItemClickListener {
         override fun onItemClick(data: DataModel) {
-            Toast.makeText(
-                this@HistoryActivity,
-                "on click: ${data.text}", Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(this@HistoryActivity,
+                "on click: ${data.text}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -51,4 +49,5 @@ class HistoryActivity : BaseActivity<AppState, HistoryInteractor>() {
     private fun initViews() {
         history_activity_recyclerview.adapter = adapter
     }
+
 }

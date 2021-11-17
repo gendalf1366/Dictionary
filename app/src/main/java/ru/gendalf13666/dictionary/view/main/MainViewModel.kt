@@ -4,11 +4,11 @@ import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.gendalf13666.dictionary.model.data.AppState
 import ru.gendalf13666.dictionary.utils.parseOnlineSearchResults
 import ru.gendalf13666.dictionary.viewmodel.BaseViewModel
+import ru.gendalf13666.repo.model.data.AppState
 
-class MainViewModel(private val interactor: MainInteractor) : BaseViewModel<AppState>() {
+class MainViewModel (private val interactor: MainInteractor) : BaseViewModel<AppState>() {
 
     private val liveDataForViewToObserve: LiveData<AppState> = mutableLiveData
 
