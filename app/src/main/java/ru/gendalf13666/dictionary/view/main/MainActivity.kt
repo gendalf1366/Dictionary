@@ -5,24 +5,41 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.lifecycle.Observer
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.play.core.splitinstall.SplitInstallManager
+import com.google.android.play.core.splitinstall.SplitInstallManagerFactory
+import com.google.android.play.core.splitinstall.SplitInstallRequest
 import kotlinx.android.synthetic.main.activity_main.*
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.android.scope.currentScope
 import ru.gendalf13666.dictionary.R
+import ru.gendalf13666.dictionary.di.loadModules
 import ru.gendalf13666.dictionary.utils.convertMeaningsToString
 import ru.gendalf13666.dictionary.utils.network.isOnline
 import ru.gendalf13666.dictionary.view.base.BaseActivity
 import ru.gendalf13666.dictionary.view.description.DescriptionActivity
-import ru.gendalf13666.dictionary.view.history.HistoryActivity
 import ru.gendalf13666.dictionary.view.main.adapter.MainAdapter
 import ru.gendalf13666.repo.model.data.AppState
-import ru.gendalf13666.repo.model.data.DataModel
+import ru.gendalf13666.repo.model.data.userdata.DataModel
 
 private const val BOTTOM_SHEET_FRAGMENT_DIALOG_TAG = "74m54328"
+private const val HISTORY_ACTIVITY_PATH = "ru.gendalf13666.history_screen.history.HistoryActivity"
+private const val HISTORY_ACTIVITY_FEATURE_NAME = "historyScreen"
+private const val REQUEST_CODE = 42
 
-class MainActivity : BaseActivity<AppState, MainInteractor>()  {
+class MainActivity : BaseActivity<AppState, MainInteractor>() {
 
-    override val model: MainViewModel by viewModel()
+    override val layoutRes = R.layout.activity_main
+    override lateinit var model: MainViewModel
+    private lateinit var splitInstallManager: SplitInstallManager
+    private lateinit var appUpdateManager: AppUpdateManager
     private val adapter: MainAdapter by lazy { MainAdapter(onListItemClickListener) }
     private val fabClickListener = View.OnClickListener {
         SearchDialogFragment.newInstance().apply {
@@ -31,40 +48,55 @@ class MainActivity : BaseActivity<AppState, MainInteractor>()  {
         }
     }
     private val onListItemClickListener = object : MainAdapter.OnListItemClickListener {
-            override fun onItemClick(data: DataModel) {
-                startActivity(
-                    DescriptionActivity.getIntent(
-                        this@MainActivity,
-                        data.text!!,
-                        convertMeaningsToString(data.meanings!!),
-                        data.meanings!![0].imageUrl
-                    )
+        override fun onItemClick(data: DataModel) {
+            startActivity(
+                DescriptionActivity.getIntent(
+                    this@MainActivity, data.text,
+                    convertMeaningsToString(data.meanings),
+                    data.meanings[0].imageUrl
                 )
-
-            }
+            )
         }
+    }
     private val onSearchClickListener = object : SearchDialogFragment.OnSearchClickListener {
-            override fun onClick(searchWord: String) {
-                isNetworkAvailable = isOnline(applicationContext)
-                if (isNetworkAvailable) {
-                    model.getData(searchWord, isNetworkAvailable)
-                } else {
-                    showNoInternetConnectionDialog()
-                }
-            }
+        override fun onClick(searchWord: String) {
+            isNetworkAvailable = isOnline(applicationContext)
+            if (isNetworkAvailable) model.getData(searchWord, isNetworkAvailable)
+            else showNoInternetConnectionDialog()
         }
+    }
+    private val stateUpdatedListener: InstallStateUpdatedListener = InstallStateUpdatedListener {
+        it?.let {
+            if (it.installStatus() == InstallStatus.DOWNLOADED) popupSnackBarForCompleteUpdate()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         initViewModel()
         initViews()
+        checkForUpdates()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        appUpdateManager
+            .appUpdateInfo
+            .addOnSuccessListener {
+                if (it.installStatus() == InstallStatus.DOWNLOADED) {
+                    popupSnackBarForCompleteUpdate()
+                }
+                if (it.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    appUpdateManager.startUpdateFlowForResult(it, IMMEDIATE, this, REQUEST_CODE)
+                }
+            }
     }
 
     private fun initViewModel() {
-        if (main_activity_recyclerview.adapter != null) {
-            throw IllegalStateException("The ViewModel should be initialized first.")
-        }
+        check(main_activity_recyclerview.adapter == null) { "The ViewModel should be initialized first." }
+        loadModules()
+        val viewModel: MainViewModel by currentScope.inject()
+        model = viewModel
         model.subscribe().observe(this@MainActivity, Observer<AppState> { renderData(it) })
     }
 
@@ -85,11 +117,70 @@ class MainActivity : BaseActivity<AppState, MainInteractor>()  {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_history -> {
-                startActivity(Intent(this, HistoryActivity::class.java))
+                splitInstallManager = SplitInstallManagerFactory.create(applicationContext)
+                val request =
+                    SplitInstallRequest
+                        .newBuilder()
+                        .addModule(HISTORY_ACTIVITY_FEATURE_NAME)
+                        .build()
+
+                splitInstallManager
+                    .startInstall(request)
+                    .addOnSuccessListener {
+                        val intent = Intent().setClassName(packageName, HISTORY_ACTIVITY_PATH)
+                        startActivity(intent)
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(
+                            applicationContext,
+                            "Couldn't download feature: " + it.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    private fun checkForUpdates() {
+        appUpdateManager = AppUpdateManagerFactory.create(applicationContext)
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateIntent ->
+            if (appUpdateIntent.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                appUpdateIntent.isUpdateTypeAllowed(IMMEDIATE)
+            ) {
+                appUpdateManager.registerListener(stateUpdatedListener)
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateIntent,
+                    IMMEDIATE,
+                    this,
+                    REQUEST_CODE
+                )
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                appUpdateManager.unregisterListener(stateUpdatedListener)
+            } else {
+                Toast
+                    .makeText(applicationContext, "Update failed! Code: $resultCode", Toast.LENGTH_LONG)
+                    .show()
+            }
+        }
+    }
+
+    private fun popupSnackBarForCompleteUpdate() {
+        Snackbar.make(
+            findViewById(R.id.activity_main_layout),
+            "An update has just been downloaded.",
+            Snackbar.LENGTH_INDEFINITE
+        ).apply {
+            setAction("INSTALL") { appUpdateManager.completeUpdate() }
+            show()
+        }
+    }
 }

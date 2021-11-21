@@ -1,36 +1,53 @@
 package ru.gendalf13666.dictionary.view.base
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.loading_layout.*
 import ru.gendalf13666.dictionary.R
-import ru.gendalf13666.dictionary.utils.network.isOnline
+import ru.gendalf13666.dictionary.utils.network.OnlineLiveData
 import ru.gendalf13666.dictionary.utils.ui.AlertDialogFragment
 import ru.gendalf13666.dictionary.viewmodel.BaseViewModel
 import ru.gendalf13666.dictionary.viewmodel.Interactor
 import ru.gendalf13666.repo.model.data.AppState
-import ru.gendalf13666.repo.model.data.DataModel
+import ru.gendalf13666.repo.model.data.userdata.DataModel
 
 private const val DIALOG_FRAGMENT_TAG = "74a54328"
 
 abstract class BaseActivity<T : AppState, I : Interactor<T>> : AppCompatActivity() {
 
     abstract val model: BaseViewModel<T>
-    protected var isNetworkAvailable: Boolean = false
+    protected abstract val layoutRes: Int
+    protected var isNetworkAvailable: Boolean = true
 
-    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
-        super.onCreate(savedInstanceState, persistentState)
-        isNetworkAvailable = isOnline(applicationContext)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(layoutRes)
+        subscribeToNetworkChange()
     }
 
     override fun onResume() {
         super.onResume()
-        isNetworkAvailable = isOnline(applicationContext)
         if (!isNetworkAvailable && isDialogNull()) {
             showNoInternetConnectionDialog()
         }
+    }
+
+    private fun subscribeToNetworkChange() {
+        OnlineLiveData(this).observe(
+            this@BaseActivity,
+            Observer<Boolean> {
+                isNetworkAvailable = it
+                if (!isNetworkAvailable) {
+                    Toast.makeText(
+                        this@BaseActivity,
+                        R.string.dialog_message_device_is_offline,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            })
     }
 
     protected fun renderData(appState: T) {
@@ -38,14 +55,8 @@ abstract class BaseActivity<T : AppState, I : Interactor<T>> : AppCompatActivity
             is AppState.Success -> {
                 showViewWorking()
                 appState.data?.let {
-                    if (it.isEmpty()) {
-                        showAlertDialog(
-                            getString(R.string.dialog_title_sorry),
-                            getString(R.string.empty_server_response_on_success)
-                        )
-                    } else {
-                        setDataToAdapter(it)
-                    }
+                    if (it.isEmpty()) showAlertDialog(getString(R.string.dialog_title), getString(R.string.empty_server_response))
+                    else setDataToAdapter(it)
                 }
             }
             is AppState.Loading -> {

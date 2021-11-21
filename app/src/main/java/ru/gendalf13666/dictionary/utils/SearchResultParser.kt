@@ -1,13 +1,27 @@
 package ru.gendalf13666.dictionary.utils
 
 import ru.gendalf13666.repo.model.data.AppState
-import ru.gendalf13666.repo.model.data.DataModel
-import ru.gendalf13666.repo.model.data.Meanings
-import ru.gendalf13666.repo.room.HistoryEntity
+import ru.gendalf13666.repo.model.data.dto.SearchResultDto
+import ru.gendalf13666.repo.model.data.userdata.DataModel
+import ru.gendalf13666.repo.model.data.userdata.Meaning
+import ru.gendalf13666.repo.model.data.userdata.TranslatedMeaning
 
 fun parseOnlineSearchResults(state: AppState): AppState = AppState.Success(mapResult(state, true))
 
-fun parseLocalSearchResults(data: AppState): AppState = AppState.Success(mapResult(data, false))
+fun mapSearchResultToResult(searchResults: List<SearchResultDto>): List<DataModel> {
+    return searchResults.map { searchResult ->
+        var meanings: List<Meaning> = listOf()
+        searchResult.meanings?.let {
+            meanings = it.map { meaningsDto ->
+                Meaning(
+                    TranslatedMeaning(meaningsDto?.translation?.text ?: ""),
+                    meaningsDto?.imageUrl ?: ""
+                )
+            }
+        }
+        DataModel(searchResult.text ?: "", meanings)
+    }
+}
 
 private fun mapResult(data: AppState, isOnline: Boolean): List<DataModel> {
     val newSearchResults = arrayListOf<DataModel>()
@@ -28,61 +42,39 @@ private fun getSuccessResultData(data: AppState.Success, isOnline: Boolean, newD
             }
         } else {
             for (searchResult in dataModels) {
-                newDataModels.add(DataModel(searchResult.text, arrayListOf()))
+                newDataModels.add(
+                    DataModel(
+                        searchResult.text,
+                        arrayListOf()
+                    )
+                )
             }
         }
     }
 }
 
 private fun parseOnlineResult(dataModel: DataModel, newDataModels: ArrayList<DataModel>) {
-    if (!dataModel.text.isNullOrBlank() && !dataModel.meanings.isNullOrEmpty()) {
-        val newMeanings = arrayListOf<Meanings>()
-        for (meaning in dataModel.meanings!!) {
-            if (meaning.translation != null && !meaning.translation!!.translation.isNullOrBlank()) {
-                newMeanings.add(Meanings(meaning.translation, meaning.imageUrl))
-            }
-        }
+    if (dataModel.text.isNotBlank() && dataModel.meanings.isNotEmpty()) {
+        val newMeanings = arrayListOf<Meaning>()
+        newMeanings.addAll(dataModel.meanings.filter { it.translatedMeaning.translatedMeaning.isNotBlank() })
         if (newMeanings.isNotEmpty()) {
-            newDataModels.add(DataModel(dataModel.text, newMeanings))
-        }
-    }
-}
-
-fun mapHistoryEntityToSearchResult(list: List<HistoryEntity>): List<DataModel> {
-    val searchResult = ArrayList<DataModel>()
-    if (!list.isNullOrEmpty()) {
-        for (entity in list) {
-            searchResult.add(DataModel(entity.word, null))
-        }
-    }
-    return searchResult
-}
-
-fun convertDataModelSuccessToEntity(appState: AppState): HistoryEntity? {
-    return when (appState) {
-        is AppState.Success -> {
-            val searchResult = appState.data
-            if (searchResult.isNullOrEmpty() || searchResult[0].text.isNullOrEmpty()) {
-                null
-            } else {
-                HistoryEntity(
-                    searchResult[0].text!!,
-                    null
+            newDataModels.add(
+                DataModel(
+                    dataModel.text,
+                    newMeanings
                 )
-            }
+            )
         }
-        else -> null
     }
 }
 
-
-fun convertMeaningsToString(meanings: List<Meanings>): String {
+fun convertMeaningsToString(meanings: List<Meaning>): String {
     var meaningsSeparatedByComma = String()
     for ((index, meaning) in meanings.withIndex()) {
         meaningsSeparatedByComma += if (index + 1 != meanings.size) {
-            String.format("%s%s", meaning.translation?.translation, ", ")
+            String.format("%s%s", meaning.translatedMeaning.translatedMeaning, ", ")
         } else {
-            meaning.translation?.translation
+            meaning.translatedMeaning.translatedMeaning
         }
     }
     return meaningsSeparatedByComma
