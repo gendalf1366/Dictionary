@@ -8,11 +8,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.gendalf13666.repo.api.ApiService
 import ru.gendalf13666.repo.api.BaseInterceptor
-import ru.gendalf13666.repo.model.data.DataModel
+import ru.gendalf13666.repo.model.data.dto.SearchResultDto
 
-class RetrofitImplementation : DataSource<List<DataModel>> {
+class RetrofitImplementation : DataSource<List<SearchResultDto>> {
 
-    override suspend fun getData(word: String): List<DataModel> =
+    override suspend fun getData(word: String): List<SearchResultDto> =
         getService(BaseInterceptor.interceptor).searchAsync(word).await()
 
     private fun getService(interceptor: Interceptor): ApiService =
