@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 dependencies {
+//    implementation project(Modules.model)
 
     implementation Design.appcompat
 
