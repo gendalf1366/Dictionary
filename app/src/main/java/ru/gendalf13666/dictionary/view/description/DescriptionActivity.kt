@@ -41,7 +41,7 @@ class DescriptionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_description)
 
         setActionbarHomeButtonAsUp()
-        description_swipe_refresh_layout.setOnRefreshListener { startLoadingOrShowError() }
+        description_swipe_refresh_layout.setOnRefreshListener{ startLoadingOrShowError() }
         setData()
     }
 
@@ -66,8 +66,7 @@ class DescriptionActivity : AppCompatActivity() {
                     )
                     stopRefreshAnimationIfNeeded()
                 }
-            }
-        )
+            })
     }
 
     private fun setData() {
@@ -92,19 +91,16 @@ class DescriptionActivity : AppCompatActivity() {
     private fun usePicassoToLoadPhoto(imageView: ImageView, imageLink: String) {
         Picasso.with(applicationContext).load("https:$imageLink")
             .placeholder(R.drawable.ic_no_photo_vector).fit().centerCrop()
-            .into(
-                imageView,
-                object : Callback {
-                    override fun onSuccess() {
-                        stopRefreshAnimationIfNeeded()
-                    }
-
-                    override fun onError() {
-                        stopRefreshAnimationIfNeeded()
-                        imageView.setImageResource(R.drawable.ic_load_error_vector)
-                    }
+            .into(imageView, object : Callback {
+                override fun onSuccess() {
+                    stopRefreshAnimationIfNeeded()
                 }
-            )
+
+                override fun onError() {
+                    stopRefreshAnimationIfNeeded()
+                    imageView.setImageResource(R.drawable.ic_load_error_vector)
+                }
+            })
     }
 
     private fun useGlideToLoadPhoto(imageView: ImageView, imageLink: String) {
@@ -150,4 +146,5 @@ class DescriptionActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
 }
